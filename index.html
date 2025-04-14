@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monthly Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #ff4c4c; /* Dark neon red */
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #ff4c4c;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: auto;
+      border: 4px solid #8b0000; /* Dark red border */
+      border-radius: 12px;
+      padding: 25px;
+      background: #111;
+      box-shadow: 0 0 20px #8b0000;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      background: #000;
+      border: 3px solid #8b0000;
+      color: #ff4c4c;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #8b0000;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      margin-top: 20px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 6px;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ff4c4c;
+      color: #000;
+    }
+
+    #summary {
+      margin-top: 30px;
+      border-top: 3px solid #8b0000;
+      padding-top: 15px;
+    }
+
+    canvas {
+      margin-top: 40px;
+    }
+
+    ul {
+      list-style-type: square;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    ::placeholder {
+      color: #ff4c4c88;
+    }
+  </style>
+</head>
+<body>
+  <h1>Monthly Expense Tracker</h1>
+  <div class="container">
+    <label for="salary">Monthly Salary ($)</label>
+    <input type="number" id="salary" placeholder="e.g. 4000" />
+
+    <label for="expenseName">Expense Name</label>
+    <input type="text" id="expenseName" placeholder="e.g. Internet bill" />
+
+    <label for="amount">Amount ($)</label>
+    <input type="number" id="amount" placeholder="e.g. 100" />
+
+    <label for="category">Category</label>
+    <select id="category">
+      <option value="Utilities">Utilities</option>
+      <option value="Rent">Rent</option>
+      <option value="Groceries">Groceries</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Savings">Savings</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <button onclick="addExpense()">Add Expense</button>
+
+    <div id="summary">
+      <h2>Summary</h2>
+      <ul id="expenseList"></ul>
+      <p><strong>Total Spent: $<span id="total">0</span></strong></p>
+      <p><strong>Percent of Salary Spent: <span id="percentage">0%</span></strong></p>
+    </div>
+
+    <canvas id="expenseChart" width="400" height="300"></canvas>
+  </div>
+
+  <script>
+    let expenses = [];
+    let chart;
+
+    function addExpense() {
+      const salary = parseFloat(document.getElementById("salary").value);
+      const name = document.getElementById("expenseName").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const category = document.getElementById("category").value;
+
+      if (!salary || !name || !amount) {
+        alert("Please fill out all fields including salary.");
+        return;
+      }
+
+      expenses.push({ name, amount, category });
+      updateSummary(salary);
+      updateChart();
+      document.getElementById("expenseName").value = "";
+      document.getElementById("amount").value = "";
+    }
+
+    function updateSummary(salary) {
+      const list = document.getElementById("expenseList");
+      const totalEl = document.getElementById("total");
+      const percentEl = document.getElementById("percentage");
+
+      list.innerHTML = "";
+      let total = 0;
+
+      expenses.forEach((e) => {
+        total += e.amount;
+        const li = document.createElement("li");
+        li.textContent = `${e.name} - $${e.amount} [${e.category}]`;
+        list.appendChild(li);
+      });
+
+      totalEl.textContent = total.toFixed(2);
+      const percentage = (total / salary) * 100;
+      percentEl.textContent = `${percentage.toFixed(2)}%`;
+    }
+
+    function updateChart() {
+      const ctx = document.getElementById("expenseChart").getContext("2d");
+
+      const categories = {};
+      expenses.forEach((e) => {
+        categories[e.category] = (categories[e.category] || 0) + e.amount;
+      });
+
+      const labels = Object.keys(categories);
+      const data = Object.values(categories);
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Expenses by Category ($)",
+            data: data,
+            backgroundColor: "#ff4c4c",
+            borderColor: "#8b0000",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              ticks: {
+                color: '#ff4c4c'
+              },
+              beginAtZero: true
+            },
+            x: {
+              ticks: {
+                color: '#ff4c4c'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ff4c4c'
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
